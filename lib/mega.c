@@ -5553,16 +5553,43 @@ gboolean mega_session_dl_compat(struct mega_session *s, const gchar *handle, con
 	}
 
 	if (opt_auto_name) {
-		// XXX: We don't check if '[NAME]_[ID]' is less than the file system limit (usually 255)
 		gchar* dot_idx = g_strrstr(params.node_name, ".");
+		gchar trunc_char = '\0';
+
+		// Filename has no extension or ends with a dot
 		if (dot_idx == NULL || *(dot_idx + 1) == '\0') {
-			// Filename has no extension or ends with a dot
+			// Leave space for an underscore and an 8-character handle
+			size_t max_len = 255 - (1 + 8);
+			if (strlen(params.node_name) > max_len) {
+				trunc_char = params.node_name[max_len];
+				params.node_name[max_len] = '\0';
+			}
+
 			local_path = g_strconcat(params.node_name, "_", params.node_handle, NULL);
+
+			if (trunc_char != '\0') {
+				params.node_name[max_len] = trunc_char;
+			}
+
+		// Found what is probably an extension
 		} else {
-			// Found what is probably an extension
+			// Leave space for underscore, 8-character handle, dot, and extension
+			size_t max_len = 255 - (1 + 8 + strlen(dot_idx));
+
 			// Modify in place for convenience
 			*dot_idx = '\0';
+
+			if (strlen(params.node_name) > max_len) {
+				trunc_char = params.node_name[max_len];
+				params.node_name[max_len] = '\0';
+			}
+
 			local_path = g_strconcat(params.node_name, "_", params.node_handle, ".", dot_idx + 1, NULL);
+
+			if (trunc_char != '\0') {
+				params.node_name[max_len] = trunc_char;
+			}
+
 			// Put back dot
 			*dot_idx = '.';
 		}
