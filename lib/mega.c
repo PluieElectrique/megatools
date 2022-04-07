@@ -5553,9 +5553,7 @@ gboolean mega_session_dl_compat(struct mega_session *s, const gchar *handle, con
 	}
 
 	if (opt_auto_name) {
-		// It's a const pointer, but we have to overwrite it here
-		g_free((void *)local_path);
-
+		// XXX: We don't check if '[NAME]_[ID]' is less than the file system limit (usually 255)
 		gchar* dot_idx = g_strrstr(params.node_name, ".");
 		if (dot_idx == NULL || *(dot_idx + 1) == '\0') {
 			// Filename has no extension or ends with a dot
