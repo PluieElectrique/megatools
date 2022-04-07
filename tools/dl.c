@@ -495,6 +495,9 @@ static int dl_main(int ac, char *av[])
 
 					gc_object_unref GFile *local_dir;
 					if (opt_auto_name) {
+						if (strcmp(opt_path, ".") != 0) {
+							g_printerr("WARNING: --auto-name overrides --path='%s'\n", opt_path);
+						}
 						gc_free gchar *auto_name = g_strconcat(root_node->name, "_", root_node->handle, NULL);
 						local_dir = g_file_new_for_path(auto_name);
 					} else {
