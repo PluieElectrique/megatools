@@ -5519,7 +5519,7 @@ gboolean mega_session_get_compat(struct mega_session *s, const gchar *local_path
 }
 
 gboolean mega_session_dl_compat(struct mega_session *s, const gchar *handle, const gchar *key, const gchar *local_path,
-				GError **err)
+				const gboolean opt_auto_name, GError **err)
 {
 	GError *local_err = NULL;
 	gc_object_unref GFile *file = NULL, *parent_dir = NULL;
@@ -5550,6 +5550,24 @@ gboolean mega_session_dl_compat(struct mega_session *s, const gchar *handle, con
 	if (!mega_session_dl_prepare(s, &params, handle, key, &local_err)) {
 		g_propagate_error(err, local_err);
 		return FALSE;
+	}
+
+	if (opt_auto_name) {
+		// It's a const pointer, but we have to overwrite it here
+		g_free((void *)local_path);
+
+		gchar* dot_idx = g_strrstr(params.node_name, ".");
+		if (dot_idx == NULL || *(dot_idx + 1) == '\0') {
+			// Filename has no extension or ends with a dot
+			local_path = g_strconcat(params.node_name, "_", params.node_handle, NULL);
+		} else {
+			// Found what is probably an extension
+			// Modify in place for convenience
+			*dot_idx = '\0';
+			local_path = g_strconcat(params.node_name, "_", params.node_handle, ".", dot_idx + 1, NULL);
+			// Put back dot
+			*dot_idx = '.';
+		}
 	}
 
 	if (local_path) {

@@ -25,6 +25,7 @@
 #endif
 
 static gchar *opt_path = ".";
+static gboolean opt_auto_name = FALSE;
 static gboolean opt_stream = FALSE;
 static gboolean opt_noprogress = FALSE;
 static gboolean opt_print_names = FALSE;
@@ -32,6 +33,7 @@ static gboolean opt_choose_files = FALSE;
 
 static GOptionEntry entries[] = {
 	{ "path", '\0', 0, G_OPTION_ARG_FILENAME, &opt_path, "Local directory or file name, to save data to", "PATH" },
+	{ "auto-name", '\0', 0, G_OPTION_ARG_NONE, &opt_auto_name, "Set the name of the downloaded file or directory to '[NAME]_[ID]'", NULL },
 	{ "no-progress", '\0', 0, G_OPTION_ARG_NONE, &opt_noprogress, "Disable progress bar", NULL },
 	{ "print-names", '\0', 0, G_OPTION_ARG_NONE, &opt_print_names, "Print names of downloaded files", NULL },
 	{ "choose-files", '\0', 0, G_OPTION_ARG_NONE, &opt_choose_files, "Choose which files to download when downloading folders (interactive)", NULL },
@@ -456,7 +458,7 @@ static int dl_main(int ac, char *av[])
 		}
 		if (l.type == LINK_FILE) {
 			// perform download
-			if (!mega_session_dl_compat(s, l.handle, l.key, opt_stream ? NULL : opt_path, &local_err)) {
+			if (!mega_session_dl_compat(s, l.handle, l.key, opt_stream ? NULL : opt_path, opt_auto_name, &local_err)) {
 				if (!opt_noprogress && tool_is_stdout_tty())
 					g_print("\r" ESC_CLREOL "\n");
 				g_printerr("ERROR: Download failed for '%s': %s\n", link, local_err->message);
@@ -491,7 +493,16 @@ static int dl_main(int ac, char *av[])
 				if (g_slist_length(l) == 1) {
 					struct mega_node *root_node = l->data;
 
-					gc_object_unref GFile *local_dir = g_file_new_for_path(opt_path);
+					gc_object_unref GFile *local_dir;
+					if (opt_auto_name) {
+						gc_free gchar *auto_name = g_strconcat(root_node->name, "_", root_node->handle, NULL);
+						local_dir = g_file_new_for_path(auto_name);
+					} else {
+						local_dir = g_file_new_for_path(opt_path);
+					}
+
+					g_file_make_directory_with_parents (local_dir, NULL, NULL);
+
 					if (g_file_query_file_type(local_dir, 0, NULL) == G_FILE_TYPE_DIRECTORY) {
 						if (opt_choose_files) {
 							if (!dl_sync_dir_choose(local_dir))

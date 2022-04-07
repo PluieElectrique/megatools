@@ -198,7 +198,7 @@ struct mega_node *mega_session_put_compat(struct mega_session *s, const gchar *r
 gboolean mega_session_get_compat(struct mega_session *s, const gchar *local_path, const gchar *remote_path,
 				 GError **err);
 gboolean mega_session_dl_compat(struct mega_session *s, const gchar *handle, const gchar *key, const gchar *local_path,
-				GError **err);
+				const gboolean opt_auto_name, GError **err);
 
 void mega_cleanup(void);
 
