@@ -5565,11 +5565,13 @@ gboolean mega_session_dl_compat(struct mega_session *s, const gchar *handle, con
 				params.node_name[max_len] = '\0';
 			}
 
-			local_path = g_strconcat(params.node_name, "_", params.node_handle, NULL);
+			gchar* auto_name = g_strconcat(params.node_name, "_", params.node_handle, NULL);
 
 			if (trunc_char != '\0') {
 				params.node_name[max_len] = trunc_char;
 			}
+			g_free(params.node_name);
+			params.node_name = auto_name;
 
 		// Found what is probably an extension
 		} else {
@@ -5584,14 +5586,21 @@ gboolean mega_session_dl_compat(struct mega_session *s, const gchar *handle, con
 				params.node_name[max_len] = '\0';
 			}
 
-			local_path = g_strconcat(params.node_name, "_", params.node_handle, ".", dot_idx + 1, NULL);
+			gchar* auto_name = g_strconcat(params.node_name, "_", params.node_handle, ".", dot_idx + 1, NULL);
 
 			if (trunc_char != '\0') {
 				params.node_name[max_len] = trunc_char;
 			}
-
 			// Put back dot
 			*dot_idx = '.';
+			g_free(params.node_name);
+			params.node_name = auto_name;
+		}
+
+		if (file) {
+			g_printerr("WARNING: --auto-name overrides --path='%s'\n", local_path);
+			g_object_unref(file);
+			file = NULL;
 		}
 	}
 
