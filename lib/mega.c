@@ -2270,7 +2270,7 @@ gboolean mega_session_open_exp_folder(struct mega_session *s, const gchar *n, co
 	build_node_tree(s);
 
 	// rebase node tree
-	if (specific) {
+	if (strlen(specific) != 0) {
 		if (!rebase_node_tree(s, specific)) {
 			g_set_error(err, MEGA_ERROR, MEGA_ERROR_OTHER, "Node not found: %s", specific);
 			return FALSE;
